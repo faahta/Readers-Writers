@@ -4,12 +4,13 @@
 #include<semaphore.h>
 #include<pthread.h>
 
-sem_t *meR1, meR2, *rSem
+sem_t *meR1, *meR2, *rSem;
 sem_t *meW, *wSem;
 int nR, nW;
 
 static void *readers(void *arg){
 	int *id = (int *)arg;
+	sleep(2);
 	sem_wait(meR1);
 		sem_wait(rSem);
 			sem_wait(meR2);
@@ -33,6 +34,7 @@ static void *readers(void *arg){
 
 static void *writers(void *arg){
 	int *id = (int *)arg;
+	
 	sem_wait(meW);
 	nW++;
 	if(nW == 1)
@@ -42,7 +44,7 @@ static void *writers(void *arg){
 	/*Guarded Write*/
 	sem_wait(wSem);
 		printf("Writer %d writing\n",*id);
-		sleep(1);
+		sleep(5);
 	sem_post(wSem);
 	
 	sem_wait(meW);
@@ -81,8 +83,13 @@ int main(){
 		pi = (int *)malloc(sizeof(int));
 		*pi = i;
 		pthread_create(&thr[i], NULL, readers, (void *)pi);
-		pthread_create(&thw[i], NULL, writers, (void *)pi);
-			sleep(1);
+	}
+	
+	for(i=0; i<20; i++){
+		pi = (int *)malloc(sizeof(int));
+		*pi = i;
+		sleep(1);
+		pthread_create(&thw[i], NULL, writers, (void *)pi);		
 	}
 	
 	pthread_exit (0);
